@@ -1,6 +1,5 @@
 apiVersion: v1
-name: busybox
-description: k8s cluster test tool
-type: application
-version: 0.1.2
-appVersion: 0.1.5
+appVersion: "1.0"
+description: pgadmin service
+name: pgadmin
+version: 6.3.0
