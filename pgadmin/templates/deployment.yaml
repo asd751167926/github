@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "pgadmin.fullname" . }}
+  labels:
+    app: {{ template "pgadmin.fullname" . }}
+    chart: {{ template "pgadmin.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "pgadmin.fullname" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "pgadmin.fullname" . }}
+        release: {{ .Release.Name }}
+    spec:
+      #imagePullSecrets:
+      #  - name: registry-gitlab
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 80
+              name: http
+              protocol: TCP
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          # readinessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          env:
+            - name: PGADMIN_DEFAULT_EMAIL
+              value: "admin@yunyi.pro"
+            - name: PGADMIN_DEFAULT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name:  {{ template "pgadmin.fullname" . }}-secret
+                  key:  password
+            - name: PGADMIN_PORT
+              value: "80"
+          volumeMounts:
+            - name: data-volume
+              mountPath:  /var/lib/pgadmin
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+      volumes:
+        - name: data-volume
+        {{- if .Values.useLocalStore }}
+          hostPath: 
+            path: {{ .Values.datapath | quote }}
+            type: DirectoryOrCreate
+        {{- else }}
+          persistentVolumeClaim:
+          {{- if .Values.cephStorePvcName }}
+            claimName: {{ .Values.cephStorePvcName }}
+          {{- else }}
+            claimName: {{ .Release.Name }}-data-pvc
+          {{- end }}
+            readOnly: false
+        {{- end }}
+{{- if .Values.nodename }}
+      nodeSelector:
+        kubernetes.io/hostname: {{ .Values.nodename }}
+{{- end }}
+#     {{- with .Values.affinity }}
+#       affinity:
+# {{ toYaml . | indent 8 }}
+#     {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
