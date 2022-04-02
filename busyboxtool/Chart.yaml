@@ -3,4 +3,4 @@ name: busybox
 description: k8s cluster test tool
 type: application
 version: 0.1.2
-appVersion: 0.1.2
+appVersion: 0.1.5
