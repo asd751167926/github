@@ -65,12 +65,6 @@ spec:
           hostPath: 
             path: {{ .Values.datapath | quote }}
             type: DirectoryOrCreate
-        {{- else }}
-          persistentVolumeClaim:
-          {{- if .Values.cephStorePvcName }}
-            claimName: {{ .Values.cephStorePvcName }}
-          {{- else }}
-            claimName: {{ .Release.Name }}-data-pvc
           {{- end }}
             readOnly: false
         {{- end }}
