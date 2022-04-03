@@ -61,13 +61,10 @@ spec:
 {{ toYaml .Values.resources | indent 12 }}
       volumes:
         - name: data-volume
-        {{- if .Values.useLocalStore }}
           hostPath: 
-            path: {{ .Values.datapath | quote }}
+            path: /root/test
             type: DirectoryOrCreate
-          {{- end }}
             readOnly: false
-        {{- end }}
 {{- if .Values.nodename }}
       nodeSelector:
         kubernetes.io/hostname: {{ .Values.nodename }}
