@@ -47,24 +47,10 @@ spec:
                   key:  password
             - name: PGADMIN_PORT
               value: "80"
-          volumeMounts:
-            - name: data-volume
-              mountPath:  /var/lib/pgadmin
-          livenessProbe:
-            exec:
-              command:
-              - cat
-              - /var/lib/pgadmin
             initialDelaySeconds: 5
             periodSeconds: 5
           resources:
 {{ toYaml .Values.resources | indent 12 }}
-      volumes:
-        - name: data-volume
-          hostPath: 
-            path: /root/test
-            type: DirectoryOrCreate
-            readOnly: false
 {{- if .Values.nodename }}
       nodeSelector:
         kubernetes.io/hostname: {{ .Values.nodename }}

@@ -50,14 +50,14 @@ questions:
     group: "运行配置"
 - variable: config.email
   required: true
-  default: "admin@yunyi.pro"
+  default: "admi.po"
   description: "pgadmin访问用户名邮箱"
   label: "pgadmin访问用户名邮箱"
   type: string
   group: "程序配置"
 - variable: config.password
   required: true
-  default: "N6vb4$%RP*QyZm!F$lHRVa!q"
+  default: "N6m!F$RV!q"
   description: "pgadmin访问密码，可使用随机生成（生成的密码在安装后的APP管理中可以看到），自己设置请设置复杂的密码，因为如果在pgadmin中记往访问过的数据库的密码，访问pgadmin就可以访问集群中保存过密码的任何数据库；修改密码时不能通过这里来修改，需要登陆pgadmin后修改密码，然后可以再在这里输入修改后的密码"
   label: "pgadmin访问密码"
   type: password
