@@ -1,20 +1,3 @@
-#是否使用本地存储，否则使用分布式存储
-useLocalStore: true
-#如果使用分布式存储，为了让程序自动转移到其它服务器，一般不需要配置服务器
-nodename: ""
-#只有当useLocalStore为true时才需要配置
-datapath: ""
-replicaCount: 1
-image:
-  repository: dpage/pgadmin4
-  tag: "6.3"
-  pullPolicy: IfNotPresent
-config:
-  email: "admin@yunyi.pro"
-  password: N6vb4$%RP*QyZm!F$lHRVa!q
-service:
-  nodePort: 8000
-resources: {}
-nodeSelector: {}
-tolerations: []
-affinity: {}
+# Default values for busyboxtool.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
