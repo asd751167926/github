@@ -24,7 +24,7 @@ spec:
         livenessProbe:
           failureThreshold: 6
           httpGet:
-            path: https://www.baidu.com
+            path: /
             port: 80
             scheme: HTTP
           initialDelaySeconds: 10
