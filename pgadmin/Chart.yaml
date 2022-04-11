@@ -2,4 +2,4 @@ apiVersion: v1
 appVersion: "1.0"
 description: pgadmin service
 name: pgadmin
-version: 6.3.2
+version: 6.3.3
