@@ -23,10 +23,10 @@ spec:
         terminationMessagePath: /dev/termination-log
         readinessProbe:
           failureThreshold: 3
-          httpGet:
-            path: /
-            port: 80
-            scheme: HTTP
+          exec:
+            command:
+            - cat
+            - /test
           initialDelaySeconds: 10
           periodSeconds: 5
           successThreshold: 1
