@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
   name: busyboxtool
   labels:
@@ -21,13 +21,3 @@ spec:
         name: busybox
         command: ["sh", "-c", "tail -f /dev/null"]
         terminationMessagePath: /dev/termination-log
-#        readinessProbe:
-#          failureThreshold: 3
-#          exec:
-#            command:
-#            - cat
-#            - /test
-#          initialDelaySeconds: 10
-#          periodSeconds: 5
-#          successThreshold: 1
-#          timeoutSeconds: 3
