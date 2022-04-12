@@ -36,7 +36,7 @@ questions:
   subquestions:
   - variable: nodename
     required: true
-    default: "cicd"
+    default: "node1"
     description: "集群内的机器名（拼音或者英文），默认在master上面"
     label: "集群内的机器名"
     type: string
