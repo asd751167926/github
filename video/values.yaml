@@ -9,8 +9,18 @@ image:
 authCertSecret: auth-key
 nuve:
   replicaCount: 2
-mongodb: ""
-rabbitmq: ""
+mongodb:
+  image:
+    repository: mongo
+    tag: 4.2
+    pullPolicy: IfNotPresent
+  dbpath: ""
+rabbitmq:
+  image:
+    repository: rabbitmq
+    tag: 3.7.15
+    pullPolicy: IfNotPresent
+  dbpath: ""
 config:
   MIN_PORT: 30000
   MAX_PORT: 30050

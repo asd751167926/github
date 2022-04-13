@@ -2,11 +2,13 @@ targetCustomizations:
 - name: dev
   helm:
     values:
-      mongodb: '/mdt-data/data1/video/mongodb'
-      rabbitmq: '/mdt-data/data1/video/rabbitmq'
-      nodename: 'node1'
-      config.PUBLIC_IP: '1.1.1.1'
-      config.HTTP_PUBLIC_IP: '192.168.100.101'
+      mongodb:
+        dbpath: "/mdt-data/data1/video/mongodb"
+      rabbitmq:
+        dbpath: "/mdt-data/data1/video/rabbitmq"
+      nodename: "node1"
+      config.PUBLIC_IP: "1.1.1.1"
+      config.HTTP_PUBLIC_IP: "192.168.100.101"
       config.HAS_PRIVATE_NET: false
   clusterSelector:
     matchLabels:
