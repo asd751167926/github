@@ -1,0 +1,267 @@
+minimum_rancher_version: v2.2.0
+questions:
+- variable: defaultImage
+  default: true
+  description: "是否使用默认的Docker镜像版本设置"
+  label: "默认Docker镜像"
+  type: boolean
+  show_subquestion_if: false
+  group: "镜像"
+  subquestions:
+  # - variable: image.repository
+  #   default: "code.yunyi.pro:5002/video/licodeservice"
+  #   description: "视频服务Docker镜像名（默认不需要修改）"
+  #   type: string
+  #   label: "视频服务Docker镜像名"
+  - variable: image.tag
+    default: "9.0.0-beta.8"
+    description: "视频服务Docker镜像版本(tag)"
+    type: string
+    label: 视频服务Docker镜像版本(tag)
+  - variable: image.pullPolicy
+    default: "IfNotPresent"
+    required: true
+    type: enum
+    description: "docker镜像拉取逻辑：IfNotPresent代表如果不存在才拉取，主要用于使用版本号的镜像，如v1.0.0,Always代表始终到服务器检查拉取最新的镜像，一般用于lastest或者以分支名作为docker tag版本号的情况，如：dev"
+    label: "docker镜像拉取逻辑"
+    options:
+    - "IfNotPresent"
+    - "Always"
+- variable: nuve.replicaCount
+  default: 2
+  description: "同时运行多少个视频nuve服务（一般不需要修改），同时运行至少2个有助于访问nuve服务的稳定性，nuve服务有时候会崩溃"
+  min: 1
+  max: 5
+  label: "同时运行多少个视频nuve服务"
+  type: int
+  group: "运行配置"
+- variable: useLocalStore
+  default: true
+  description: "是否使用单机存储，默认为是，如果为否则使用分布式存储，前提：已部署分布式存储"
+  label: "使用单机存储"
+  type: boolean
+  show_subquestion_if: true
+  group: "运行配置"
+  subquestions:
+  - variable: nodename
+    required: true
+    default: ""
+    description: "集群内的机器名（拼音或者英文），默认在master上面"
+    label: "集群内的机器名"
+    type: string
+  #mongodb配置
+  - variable: mongodb.dbpath
+    required: true
+    default: ""
+    description: "mongodb数据库存储的主机硬盘路径，必须先创建该文件夹"
+    label: "mongodb数据库存储位置"
+    type: string
+  #elasticsearch配置
+  - variable: rabbitmq.dbpath
+    required: true
+    default: ""
+    description: "rabbitmq数据存储的主机硬盘路径，必须先创建该文件夹"
+    label: "rabbitmq数据存储位置"
+    type: string
+- variable: resources.requests.cpu
+  required: true
+  default: "100m"
+  description: "CPU最低要求，1CPU=1000m"
+  label: "CPU最低要求"
+  type: string
+  group: "运行配置"
+- variable: ingress.enabled
+  default: false
+  description: "是否使用nginx-ingress来反向代理访问本服务，开启后可以通过nginx-ingress的端口比如443和8090端口访问本服务，注意一般不需要开，开启需要给本服务提供一个独立的域名，只有某些环境不开放多余的端口且需要给本服务提供独立的域名才行"
+  label: "是否使用nginx-ingress来反向代理访问本服务"
+  type: boolean
+  group: "网络配置"
+  show_subquestion_if: true
+  subquestions:
+  - variable: ingress.class
+    default: "nginx"
+    description: "ingress控制器，默认为nginx，如果集群中部署了两个ingress控制器（如两个ingress-nginx控制器），则可以选择用哪一个来访问访问本服务，主要用于控制内外网"
+    type: string
+    required: true
+    label: "ingress.class"
+  - variable: ingress.basicexample.host
+    default: ""
+    required: true
+    description: "访问本服务中的API服务的DNS：必须与以下配置的证书对应的DNS一致（除非证书是用于多种域名通用的），必填，由于本程序使用根路径来访问，所以同一个nginx同一个DNS只能有一个也使用根路径的服务使用这个域名"
+    type: string
+    label: "访问本服务中的API服务的DNS"
+  - variable: ingress.basicexample.secretName
+    default: ""
+    required: true
+    description: "访问本服务中的API服务的DNS对应的证书名称，需要先上传HTTPS证书（方法参考上传默认的https-tls证书），必填"
+    type: string
+    label: "访问本服务中的API服务的DNS对应的证书名称"
+  - variable: ingress.erizocontroller.host
+    default: ""
+    required: true
+    description: "访问本服务中的视频控制服务的DNS：必须与以下配置的证书对应的DNS一致（除非证书是用于多种域名通用的），必填，由于本程序使用根路径来访问，所以同一个nginx同一个DNS只能有一个也使用根路径的服务使用这个域名"
+    type: string
+    label: "访问本服务中的视频控制的DNS"
+  - variable: ingress.erizocontroller.secretName
+    default: ""
+    required: true
+    description: "访问本服务中的视频控制服务的DNS对应的证书名称，需要先上传HTTPS证书（方法参考上传默认的https-tls证书），必填"
+    type: string
+    label: "访问本服务中的视频控制的DNS对应的证书名称"
+- variable: config.MIN_PORT
+  default: 30000
+  description: "视频UDP端口范围最小值，如果要外网视频范围内的所有端口需要开放到外网访问"
+  label: "视频UDP端口范围最小值"
+  type: int
+  min: 5000
+  max: 42767
+  group: "程序配置"
+- variable: config.MAX_PORT
+  default: 30050
+  description: "视频UDP端口范围最大值，如果要外网视频范围内的所有端口需要开放到外网访问"
+  label: "视频UDP端口范围最大值"
+  type: int
+  min: 5000
+  max: 42767
+  group: "程序配置"
+- variable: config.ERIZO_CONTROLLER_PORT
+  default: 8880
+  description: "视频控制HTTPS监听TCP端口，默认值为8880，如果要外网视频此端口需要开放到外网访问；如果有开启nginx反向代理，则配置nginx反向代理的端口，不是本服务的端口"
+  label: "视频控制HTTPS监听TCP端口，默认值为8880"
+  type: int
+  min: 81
+  max: 42767
+  group: "程序配置"
+- variable: config.ERIZO_CONTROLLER_HTTP_PORT
+  default: 8881
+  description: "视频控制HTTP监听TCP端口，默认值为8881；如果有开启nginx反向代理，则配置nginx反向代理的端口，不是本服务的端口"
+  label: "视频控制HTTP监听TCP端口，默认值为8881"
+  type: int
+  min: 81
+  max: 42767
+  group: "程序配置"
+- variable: config.API_HTTPS_PORT
+  default: 3004
+  description: "视频API服务HTTPS端口，默认值为3004，需要将域名和此端口配置给使用端访问用于外网视频，如 https://v.cloudmedtech.com:3004/，如果要外网视频此端口需要开放到外网访问"
+  label: "视频API服务HTTPS端口，默认值为3004"
+  type: int
+  min: 81
+  max: 42767
+  group: "程序配置"
+- variable: config.API_HTTP_PORT
+  default: 3001
+  description: "视频API服务HTTP端口，默认值为3001，需要将IP和此端口配置给使用端访问用于内网视频，如 https://10.0.0.2:3001/"
+  label: "视频API服务HTTP端口，默认值为3001"
+  type: int
+  min: 81
+  max: 32767
+  group: "程序配置"
+- variable: config.HOST_NAME
+  default: ""
+  required: true
+  description: "视频控制外网访问域名，一般用于外网访问，如：v.cloudmedtech.com，如果使用nginx-ingress转发来访问本服务，要填前面配置的视频控制ingress配置的域名"
+  label: "视频控制外网访问域名"
+  type: string
+  group: "程序配置"
+- variable: config.PUBLIC_IP
+  default: ""
+  required: true
+  description: "视频控制外网访问IP，填写服务器外网IP"
+  label: "视频控制外网访问IP"
+  type: string
+  group: "程序配置"
+- variable: config.HTTP_HOST_NAME
+  default: ""
+  description: "视频控制内网访问域名，一般在内网没有域名，则不需要填，只有在内网使用域名时才需要填写，如果在内网使用域名访问HTTPS端，则与外网的域名要一致，不支持HTTPS用两个域名访问；如果使用nginx-ingress转发来访问本服务，要填前面配置的视频控制ingress配置的域名"
+  label: "视频控制内网访问域名"
+  type: string
+  group: "程序配置"
+- variable: config.HTTP_PUBLIC_IP
+  default: ""
+  required: true
+  description: "视频控制内网访问IP，填写内网服务器IP"
+  label: "视频控制内网访问IP"
+  type: string
+  group: "程序配置"
+- variable: config.erizo_numIOWorkers
+  default: 1
+  required: true
+  description: "视频流处理进程数，默认为1，为了提高性能可以增加，不要太高，最多不超过CPU核心数"
+  label: "视频流处理进程数"
+  type: int
+  min: 1
+  max: 8
+  group: "程序配置"
+- variable: HAS_PRIVATE_NET
+  default: true
+  description: "是否有专网"
+  label: "是否有专网"
+  type: boolean
+  show_subquestion_if: true
+  group: "专网配置"
+  subquestions:
+  - variable: config.PRIVATE_HOST_NAME
+    default: ""
+    description: "专网访问域名；没有专网则不需要填写；一般在专网没有域名，则不需要填；只有在专网使用域名时才需要填写，如果在专网使用域名访问HTTPS端，则与外网的域名要一致，不支持HTTPS用两个域名访问"
+    label: "专网访问域名"
+    type: string
+    group: "专网配置"
+  - variable: config.PRIVATE_PUBLIC_IP
+    default: ""
+    required: true
+    description: "专网访问IP，填写专网环境下访问服务器时使用的IP"
+    label: "专网访问IP"
+    type: string
+    group: "专网配置"
+- variable: httpsCertSecretname
+  required: true
+  default: "https-tls"
+  description: "HTTPS证书secret名，默认为https-tls（即集群默认的HTTPS证书），如果要与默认的域名不同，则需要额外上传一个HTTPS证书,上传过程参考https-tls的上传过程，然后将该证书上传保存的名称填写到这里"
+  label: "HTTPS证书secret名"
+  type: string
+  group: "程序配置"
+- variable: authCertSecret
+  required: true
+  default: "auth-key"
+  description: "登陆token验证证书secret名，默认为auth-key，需要与一起使用的API使用相同的证书"
+  label: "登陆token验证证书secret名"
+  type: string
+  group: "程序配置"
+- variable: config.log.DEFAULT_LEVEL
+  required: true
+  default: "info"
+  description: "默认日志等级"
+  label: "默认日志等级"
+  type: enum
+  options:
+    - "debug"
+    - "info"
+  group: "日志配置"
+# - variable: config.qr.LocalQRPort
+#   default: 7100
+#   description: "QR本地端口（QR下载需要配置）"
+#   label: "QR本地端口"
+#   min: 81
+#   max: 32767
+#   type: int
+#   group: "程序配置"
+#   show_subquestion_if: true
+#   subquestions:
+#   - variable: config.PatientRecycle.KeepDays
+#     default: 30
+#     description: "video保存天数"
+#     label: "video保存天数"
+#     min: 2
+#     max: 30000
+#     type: int
+#     group: "程序配置"
+  # - variable: ingressShim.defaultIssuerName
+  #   default: "letsencrypt-staging"
+  #   required: true
+  #   type: enum
+  #   description: "Let's Encrypt ACME clients, use staging environment to avoid hitting rate limits"
+  #   label: Let's Encrypt Cluster Issuer clients
+  #   group: "Settings"
+  #   options:
+  #   - "letsencrypt-staging"
+  #   - "letsencrypt-prod"

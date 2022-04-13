@@ -1,0 +1,139 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "video.fullname" . }}-basicexample
+  labels:
+    app: {{ template "video.fullname" . }}-basicexample
+    chart: {{ template "video.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 3001
+      targetPort: http
+      name: http
+      nodePort: {{ .Values.config.API_HTTP_PORT }}
+    - protocol: TCP
+      port: 3004
+      targetPort: https
+      name: https
+      nodePort: {{ .Values.config.API_HTTPS_PORT }}
+  selector:
+    app: {{ template "video.fullname" . }}-basicexample
+    release: {{ .Release.Name }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "video.fullname" . }}-basicexample
+  labels:
+    app: {{ template "video.fullname" . }}-basicexample
+    chart: {{ template "video.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "video.fullname" . }}-basicexample
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "video.fullname" . }}-basicexample
+        release: {{ .Release.Name }}
+    spec:
+      imagePullSecrets:
+        - name: registry-gitlab
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - '--basicExample'
+          ports:
+            - containerPort: 3001
+              name: http
+            - containerPort: 3004
+              name: https
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          # readinessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          env:
+            - name: SSL_KEY
+              value: '{{ .Values.config.SSL_KEY }}'
+            - name: SSL_CERT
+              value: '{{ .Values.config.SSL_CERT }}'
+            - name: NUVE_ADDRESS
+              value: 'http://{{ template "video.fullname" . }}-nuve:3000/'
+            - name: MONGDO_HOST
+              value: '{{ template "video.fullname" . }}-mongodb'
+            - name: PUBLIC_IP
+              value: '{{ .Values.config.PUBLIC_IP }}'
+            - name: HTTP_PUBLIC_IP
+              value: '{{ .Values.config.HTTP_PUBLIC_IP }}'
+            - name: PRIVATE_PUBLIC_IP
+              value: '{{ .Values.config.PRIVATE_PUBLIC_IP }}'
+            - name: ERIZO_CONTROLLER_PORT
+              value: '{{ .Values.config.ERIZO_CONTROLLER_PORT }}'
+            - name: ERIZO_CONTROLLER_HTTP_PORT
+              value: '{{ .Values.config.ERIZO_CONTROLLER_HTTP_PORT }}'
+            - name: API_HTTP_PORT
+              value: '{{ .Values.config.API_HTTP_PORT }}'
+            - name: API_HTTPS_PORT
+              value: '{{ .Values.config.API_HTTPS_PORT }}'
+          volumeMounts:
+            - name: tls-volume
+              mountPath: /opt/licode/cert/ssl.key
+              subPath: tls.key
+            - name: tls-volume
+              mountPath: /opt/licode/cert/ssl.crt
+              subPath: tls.crt
+            - name: auth-key-volume
+              mountPath: /opt/licode/cert/auth.crt
+              subPath: tls.crt
+            - name: config-volume
+              mountPath: /opt/licode/extras/log4js_configuration.json
+              subPath: log4js_configuration.json
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+      volumes:
+        - name: tls-volume
+          secret:
+            secretName: {{ .Values.httpsCertSecretname }}
+        - name: auth-key-volume
+          secret:
+            secretName: {{ .Values.authCertSecret }}
+        - name: config-volume
+          configMap:
+            name: {{ .Release.Name }}-config
+      # let video schedule on the same node with and after video nuve
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - {{ template "video.fullname" . }}-nuve
+              topologyKey: kubernetes.io/hostname
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+#     {{- with .Values.affinity }}
+#       affinity:
+# {{ toYaml . | indent 8 }}
+#     {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}

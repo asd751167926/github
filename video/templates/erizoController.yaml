@@ -1,0 +1,144 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "video.fullname" . }}-erizocontroller
+  labels:
+    app: {{ template "video.fullname" . }}-erizocontroller
+    chart: {{ template "video.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+{{- if not .Values.ingress.enabled }}
+  type: NodePort
+{{- end }}
+  ports:
+    - protocol: TCP
+      port: 8881
+      targetPort: http
+      name: http
+    {{- if not .Values.ingress.enabled }}
+      nodePort: {{ .Values.config.ERIZO_CONTROLLER_HTTP_PORT }}
+    {{- end }}
+    - protocol: TCP
+      port: 8880
+      targetPort: https
+      name: https
+    {{- if not .Values.ingress.enabled }}
+      nodePort: {{ .Values.config.ERIZO_CONTROLLER_PORT }}
+    {{- end }}
+  selector:
+    app: {{ template "video.fullname" . }}-erizocontroller
+    release: {{ .Release.Name }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "video.fullname" . }}-erizocontroller
+  labels:
+    app: {{ template "video.fullname" . }}-erizocontroller
+    chart: {{ template "video.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "video.fullname" . }}-erizocontroller
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "video.fullname" . }}-erizocontroller
+        release: {{ .Release.Name }}
+    spec:
+      imagePullSecrets:
+        - name: registry-gitlab
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - '--erizoController'
+          ports:
+            - containerPort: 8881
+              name: http
+            - containerPort: 8880
+              name: https
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          # readinessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          env:
+            - name: PUBLIC_IP
+              value: '{{ .Values.config.PUBLIC_IP }}'
+            - name: HTTP_PUBLIC_IP
+              value: '{{ .Values.config.HTTP_PUBLIC_IP }}'
+            - name: PRIVATE_PUBLIC_IP
+              value: '{{ .Values.config.PRIVATE_PUBLIC_IP }}'
+            - name: HOST_NAME
+              value: '{{ .Values.config.HOST_NAME }}'
+            - name: HTTP_HOST_NAME
+              value: '{{ .Values.config.HTTP_HOST_NAME }}'
+            - name: PRIVATE_HOST_NAME
+              value: '{{ .Values.config.PRIVATE_HOST_NAME }}'
+            - name: SSL_KEY
+              value: '{{ .Values.config.SSL_KEY }}'
+            - name: SSL_CERT
+              value: '{{ .Values.config.SSL_CERT }}'
+            - name: ERIZO_CONTROLLER_PORT
+              value: '{{ .Values.config.ERIZO_CONTROLLER_PORT }}'
+            - name: ERIZO_CONTROLLER_HTTP_PORT
+              value: '{{ .Values.config.ERIZO_CONTROLLER_HTTP_PORT }}'
+            - name: RABBIT_HOST
+              value: '{{ template "video.fullname" . }}-rabbitmq'
+            - name: RABBIT_PORT
+              value: '5672'
+            - name: MONGDO_HOST
+              value: '{{ template "video.fullname" . }}-mongodb'
+          volumeMounts:
+            - name: tls-volume
+              mountPath: /opt/licode/cert/ssl.key
+              subPath: tls.key
+            - name: tls-volume
+              mountPath: /opt/licode/cert/ssl.crt
+              subPath: tls.crt
+            - name: config-volume
+              mountPath: /opt/licode/erizo_controller/log4js_configuration.json
+              subPath: log4js_configuration.json
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+      volumes:
+        - name: tls-volume
+          secret:
+            secretName: {{ .Values.httpsCertSecretname }}
+        - name: config-volume
+          configMap:
+            name: {{ .Release.Name }}-config
+      # let video schedule on the same node with video database
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - {{ template "video.fullname" . }}-rabbitmq
+                      - {{ template "video.fullname" . }}-mongodb
+              topologyKey: kubernetes.io/hostname
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+#     {{- with .Values.affinity }}
+#       affinity:
+# {{ toYaml . | indent 8 }}
+#     {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}

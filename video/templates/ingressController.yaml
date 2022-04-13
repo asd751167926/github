@@ -1,0 +1,46 @@
+{{- if .Values.ingress.enabled -}}
+{{- if .Capabilities.APIVersions.Has "networking.k8s.io/v1/Ingress" }}
+apiVersion: networking.k8s.io/v1
+{{- else }}
+apiVersion: networking.k8s.io/v1beta1
+{{- end }}
+kind: Ingress
+metadata:
+  name: {{ template "video.fullname" . }}-erizocontroller-ingress
+  labels:
+    app: {{ template "video.fullname" . }}-erizocontroller
+    chart: {{ template "video.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  annotations:
+    kubernetes.io/ingress.class: {{ .Values.ingress.class | quote }}
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "36000"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "36000"
+spec:
+{{- if .Values.ingress.erizocontroller.host }}
+  tls:
+    - hosts: 
+        - {{ .Values.ingress.erizocontroller.host }}
+      secretName: {{ .Values.ingress.erizocontroller.secretName }}
+{{- end }}
+  rules:
+  - http:
+      paths:
+      - path: /
+        backend:
+          {{- if .Capabilities.APIVersions.Has "networking.k8s.io/v1/Ingress" }}
+          service:
+            name: {{ template "video.fullname" . }}-erizocontroller
+            port:
+              name: http
+          {{- else }}
+          serviceName: {{ template "video.fullname" . }}-erizocontroller
+          servicePort: http
+          {{- end }}
+        {{- if .Capabilities.APIVersions.Has "networking.k8s.io/v1/Ingress" }}
+        pathType: ImplementationSpecific
+        {{- end }}
+{{- if .Values.ingress.erizocontroller.host }}
+    host: {{ .Values.ingress.erizocontroller.host }}
+{{- end }}
+{{- end }}
