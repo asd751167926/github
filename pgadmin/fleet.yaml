@@ -1,9 +1,0 @@
-targetCustomizations:
-- name: dev
-  helm:
-    values:
-      datapath: "/root/test"
-      nodename: "node1"
-  clusterSelector:
-    matchLabels:
-      name: local
